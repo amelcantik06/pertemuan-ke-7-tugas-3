@@ -8,33 +8,27 @@ use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Menampilkan semua book[cite: 1]
     public function index()
     {
         return response()->json(Book::all(), 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $validatedData = $request->validate([
-            'title' => 'required|string',
-            'description' => 'nullable|string',
-            'status' => 'required|in:available,unavailable',
-        ]);
+    // Menyimpan book baru[cite: 2]
+   public function store(Request $request)
+{
+    $validated = $request->validate([
+        'title' => 'required|string',
+        'description' => 'required|string',
+        'status' => 'required',
+    ]);
 
-        $book = Book::create($validatedData);
-        return response()->json($book, 201);
-    }
+    $book = Book::create($validated);
+    return response()->json($book, 201);
+}
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    // Menampilkan satu book berdasarkan ID[cite: 2]
+    public function show($id)
     {
         $book = Book::find($id);
         if (!$book) {
@@ -43,30 +37,20 @@ class BookController extends Controller
         return response()->json($book, 200);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    // Memperbarui book[cite: 2]
+    public function update(Request $request, $id)
     {
         $book = Book::find($id);
         if (!$book) {
             return response()->json(['message' => 'Book not found'], 404);
         }
 
-        $validatedData = $request->validate([
-            'title' => 'sometimes|required|string',
-            'description' => 'sometimes|nullable|string',
-            'status' => 'in:available,unavailable',
-        ]);
-
-        $book->update($validatedData);
+        $book->update($request->all());
         return response()->json($book, 200);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    // Menghapus book[cite: 2]
+    public function destroy($id)
     {
         $book = Book::find($id);
         if (!$book) {

@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#123d32">
+    <meta name="user-id" content="{{ auth()->id() }}">
+    <meta name="reverb-key" content="{{ config('reverb.apps.apps.0.key') }}">
+    <meta name="reverb-host" content="{{ config('reverb.apps.apps.0.options.host') }}">
+    <meta name="reverb-port" content="{{ config('reverb.apps.apps.0.options.port') }}">
+    <meta name="reverb-scheme" content="{{ config('reverb.apps.apps.0.options.scheme') }}">
     <title>@yield('title', 'Minimarket') · Minimarket</title>
+    @vite('resources/js/app.js')
     <style>
         :root {
             --ink: #1d2d27;
@@ -89,6 +95,10 @@
         .input-error { color: var(--red); font-size: 11px; }
         .alert { margin-bottom: 18px; padding: 13px 15px; border: 1px solid #cbe1cf; border-radius: 9px; background: #f1f9f1; color: #2c6948; font-size: 13px; }
         .alert.error { border-color: #efc8c1; background: #fff5f3; color: var(--red); }
+        .realtime-notification { position: fixed; z-index: 1000; top: 20px; right: 20px; display: flex; align-items: flex-start; gap: 14px; width: min(390px, calc(100vw - 40px)); padding: 15px 16px; border: 1px solid #cbe1cf; border-radius: 10px; background: #fff; box-shadow: 0 12px 38px rgb(26 49 39 / 16%); color: var(--ink); }
+        .realtime-notification[hidden] { display: none; }
+        .realtime-notification-message { margin: 0; font-size: 13px; line-height: 1.5; }
+        .realtime-notification-dismiss { flex: 0 0 auto; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; }
         .empty-state { padding: 34px 16px; color: var(--muted); text-align: center; }
         .pagination { margin-top: 18px; }
         .pagination nav { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
@@ -123,6 +133,10 @@
     @stack('styles')
 </head>
 <body>
+<div class="realtime-notification" data-realtime-notification role="status" aria-live="polite" hidden>
+    <p class="realtime-notification-message" data-notification-message></p>
+    <button class="realtime-notification-dismiss" type="button" data-notification-dismiss aria-label="Tutup notifikasi">&times;</button>
+</div>
 <div class="app-shell">
     <aside class="sidebar">
         <a class="brand" href="{{ auth()->user()->role === 'admin' ? route('admin') : route('kasir') }}" style="text-decoration:none">
@@ -174,6 +188,21 @@
         </main>
     </div>
 </div>
+
+@auth
+<script>
+    window.Echo.private('user.{{ auth()->id() }}')
+        .listen('.OrderPlaced', (e) => {
+
+            alert(
+                'Order #' + e.order_id +
+                ' telah ditempatkan! Total: Rp' + e.total
+            );
+
+            console.log('Order Placed:', e);
+        });
+</script>
+@endauth
 @stack('scripts')
 </body>
 </html>

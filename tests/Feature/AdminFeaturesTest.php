@@ -102,6 +102,25 @@ class AdminFeaturesTest extends TestCase
         $cashier = User::where('email', 'kasir-baru@example.com')->firstOrFail();
         $this->assertSame('kasir', $cashier->role);
 
+        $this->put(route('admin.users.update', $cashier), [
+            'name' => 'Kasir Diperbarui',
+            'email' => $cashier->email,
+            'role' => 'kasir',
+        ])->assertRedirect();
+
+        $this->put(route('admin.users.update', $admin), [
+            'name' => $admin->name,
+            'email' => $admin->email,
+            'role' => 'kasir',
+        ])->assertSessionHasErrors('role');
+        $this->assertDatabaseHas('users', ['id' => $admin->id, 'role' => 'admin']);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $cashier->id,
+            'name' => 'Kasir Diperbarui',
+            'password' => $cashier->password,
+        ]);
+
         $this->delete(route('admin.users.destroy', $admin))
             ->assertSessionHasErrors('user');
         $this->assertDatabaseHas('users', ['id' => $admin->id]);

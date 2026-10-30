@@ -1,0 +1,11 @@
+$kind: http-request
+name: ""
+url: 127.0.0.1:8000/api/books
+method: POST
+body:
+  type: urlencoded
+  content:
+    title: Konsep Basis Data
+    description: Deskripsi atau keterangan buku
+    status: "1"
+order: 1000

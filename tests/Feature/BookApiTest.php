@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Book;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,6 +13,10 @@ class BookApiTest extends TestCase
 
     public function test_books_can_be_created_listed_shown_updated_and_deleted(): void
     {
+        $user = User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+        $this->withToken($token);
+
         $createResponse = $this->postJson('/api/books', [
             'title' => 'Laravel Basics',
             'description' => 'An introductory book.',
@@ -49,6 +54,10 @@ class BookApiTest extends TestCase
 
     public function test_book_creation_validates_required_fields_and_unknown_books_return_not_found(): void
     {
+        $user = User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+        $this->withToken($token);
+
         $this->postJson('/api/books', [])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['title', 'status']);

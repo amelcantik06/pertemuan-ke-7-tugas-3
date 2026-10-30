@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderPlaced;
 use App\Models\Product;
 use App\Models\Sale;
 use Illuminate\Http\RedirectResponse;
@@ -128,6 +129,8 @@ class CashierController extends Controller
 
             return $sale;
         });
+
+        OrderPlaced::dispatch($sale, $sale->cashier);
 
         return redirect()->route('sales.show', $sale)->with('success', 'Transaksi berhasil disimpan.');
     }

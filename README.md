@@ -21,6 +21,19 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Akun awal dan produk
+
+Untuk menyiapkan database baru, jalankan `php artisan migrate --seed`. Seeder membuat akun berikut jika belum ada:
+
+- Admin: `adminbaru@minimarket.com` / `admin123`
+- Kasir: `kasir@minimarket.com` / `kasir123`
+
+Login melalui `/login`. Setelah masuk sebagai admin, buka **Inventaris → Tambah produk** untuk mengisi barang, harga, dan stok. Akun demo ini hanya untuk pengembangan lokal; ganti password sebelum aplikasi digunakan bersama atau dipublikasikan.
+
+## Real-time transaksi
+
+Notifikasi transaksi kasir dikirim melalui Laravel Reverb ke private channel milik kasir yang membuat transaksi. Salin konfigurasi Reverb dari `.env.example` ke `.env`, lalu gunakan key, secret, host, dan port lokal yang sama untuk server dan Echo. Jalankan `composer dev` untuk memulai aplikasi, queue worker, Vite, dan Reverb; setelah itu login sebagai kasir dan buat transaksi untuk menguji notifikasi.
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.

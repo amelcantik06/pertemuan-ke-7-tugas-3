@@ -71,6 +71,24 @@ class SalesWorkflowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_cashier_page_loads_the_product_search_and_checkout_script(): void
+    {
+        $cashier = User::factory()->create(['role' => 'kasir']);
+        Product::create([
+            'name' => 'Kopi',
+            'price' => 5000,
+            'stock' => 8,
+        ]);
+
+        $this->actingAs($cashier)
+            ->get(route('kasir'))
+            ->assertOk()
+            ->assertSee('product-search')
+            ->assertSee('Kopi')
+            ->assertSee('function renderProducts()')
+            ->assertSee('Bayar & cetak', false);
+    }
+
     public function test_sale_is_rejected_when_stock_or_payment_is_insufficient(): void
     {
         $cashier = User::factory()->create(['role' => 'kasir']);

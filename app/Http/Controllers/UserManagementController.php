@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class UserManagementController extends Controller
@@ -48,17 +50,26 @@ class UserManagementController extends Controller
             'password' => ['nullable', 'string', 'min:8'],
         ]);
 
-        if ($user->role === 'admin' && $validated['role'] !== 'admin' && User::where('role', 'admin')->count() <= 1) {
-            return back()->withErrors(['role' => 'Setidaknya harus ada satu akun admin aktif.'])->withInput();
-        }
+        $user = DB::transaction(function () use ($user, $validated): User {
+            $admins = User::where('role', 'admin')->orderBy('id')->lockForUpdate()->get();
+            $user = User::query()->lockForUpdate()->findOrFail($user->getKey());
 
-        $user->name = $validated['name'];
-        $user->email = $validated['email'];
-        $user->role = $validated['role'];
-        if ($validated['password'] !== null && $validated['password'] !== '') {
-            $user->password = Hash::make($validated['password']);
-        }
-        $user->save();
+            if ($user->role === 'admin' && $validated['role'] !== 'admin' && $admins->count() <= 1) {
+                throw ValidationException::withMessages([
+                    'role' => 'Setidaknya harus ada satu akun admin aktif.',
+                ]);
+            }
+
+            $user->name = $validated['name'];
+            $user->email = $validated['email'];
+            $user->role = $validated['role'];
+            if (!empty($validated['password'])) {
+                $user->password = Hash::make($validated['password']);
+            }
+            $user->save();
+
+            return $user;
+        });
 
         if ($user->is(auth()->user()) && $user->role !== 'admin') {
             return redirect()->route('kasir')->with('success', 'Profil dan role akun Anda berhasil diperbarui.');
@@ -73,15 +84,24 @@ class UserManagementController extends Controller
             return back()->withErrors(['user' => 'Akun yang sedang digunakan tidak dapat dihapus.']);
         }
 
-        if ($user->sales()->exists() || $user->stockReceipts()->exists()) {
-            return back()->withErrors(['user' => 'Akun ini memiliki riwayat transaksi atau stok masuk dan tidak dapat dihapus.']);
-        }
+        DB::transaction(function () use ($user): void {
+            $admins = User::where('role', 'admin')->orderBy('id')->lockForUpdate()->get();
+            $user = User::query()->lockForUpdate()->findOrFail($user->getKey());
 
-        if ($user->role === 'admin' && User::where('role', 'admin')->count() <= 1) {
-            return back()->withErrors(['user' => 'Setidaknya harus ada satu akun admin aktif.']);
-        }
+            if ($user->role === 'admin' && $admins->count() <= 1) {
+                throw ValidationException::withMessages([
+                    'user' => 'Setidaknya harus ada satu akun admin aktif.',
+                ]);
+            }
 
-        $user->delete();
+            if ($user->sales()->exists() || $user->stockReceipts()->exists()) {
+                throw ValidationException::withMessages([
+                    'user' => 'Akun ini memiliki riwayat transaksi atau stok masuk dan tidak dapat dihapus.',
+                ]);
+            }
+
+            $user->delete();
+        });
 
         return back()->with('success', 'Pengguna berhasil dihapus.');
     }
